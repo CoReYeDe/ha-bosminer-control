@@ -1,0 +1,171 @@
+type: custom:stack-in-card
+mode: vertical
+cards:
+  - type: conditional
+    conditions:
+      - entity: sensor.miner_s9_config_status
+        state: '0'
+    card:
+      type: custom:stack-in-card
+      mode: vertical
+      cards:
+        - type: custom:mushroom-template-card
+          primary: |
+            BOS-Miner s9 Offline - {{ states('input_text.miner_s9_ip') }}
+          secondary: Tap to turn ON
+          icon: mdi:pickaxe
+          entity: sensor.miner_s9_config
+          icon_color: red
+          badge_icon: ''
+          tap_action:
+            confirmation:
+              text: Turn ON Miner?
+            action: call-service
+            service: switch.turn_on
+            data:
+              entity_id: switch.your_smart_plug_for_miner
+  - type: conditional
+    conditions:
+      - entity: sensor.miner_s9_config_status
+        state: '1'
+    card:
+      type: custom:stack-in-card
+      mode: vertical
+      cards:
+        - type: custom:mushroom-template-card
+          primary: >
+            {{ states('sensor.miner_s9_config_os') if
+            (states('sensor.miner_s9_config_status') == '1') else 'Miner
+            Offline' }} 
+          secondary: >
+            {{ states('sensor.miner_s9_status_description')
+            if (states('sensor.miner_s9_config_status') == '1') else 'Offline'
+            }}
+          icon: mdi:pickaxe
+          entity: sensor.miner_s9_config
+          icon_color: >-
+            {{ 'green' if (states('sensor.miner_s9_config_status') == '1') else
+            'red' }}
+          badge_icon: ''
+          tap_action:
+            confirmation:
+              text: Turn OFF Miner?
+            action: call-service
+            service: switch.turn_off
+            data:
+              entity_id: switch.your_smart_plug_for_miner
+        - type: custom:mushroom-template-card
+          primary: Hashrate
+          secondary: >
+            AVG: {{ states('sensor.miner_s9_hashrate_avg') if
+            (states('sensor.miner_s9_config_status') == '1') else 0 }} TH/s - 15
+            Min: {{ states('sensor.miner_s9_hashrate_15m') if
+            (states('sensor.miner_s9_config_status') == '1') else 0 }} TH/s -
+            24h: {{ states('sensor.miner_s9_hashrate_24h') if
+            (states('sensor.miner_s9_config_status') == '1') else 0 }} GH/s
+          icon: mdi:speedometer
+          entity: sensor.miner_s9_config
+          icon_color: green
+        - type: custom:mushroom-template-card
+          primary: >
+            {{ states('sensor.miner_s9_tunerstatus_amc') if
+            (states('sensor.miner_s9_config_status') == '1') else 0 }} W /  {{
+            states('sensor.miner_s9_tunerstatus_powerlimit') if
+            (states('sensor.miner_s9_config_status') == '1') else 0 }} W -
+            Active PowerLimit 
+          secondary: >
+            Est. Efficiency: {{ states('sensor.miner_s9_miner_efficiency') if
+            (states('sensor.miner_s9_config_status') == '1') else 0 }} W/THs
+          icon: mdi:gauge
+          entity: sensor.miner_s9_config
+          icon_color: >-
+            {{ 'green' if (states('sensor.miner_s9_config_status') == '1') else
+            'red' }}
+          badge_icon: ''
+          fill_container: true
+        - type: custom:mushroom-number-card
+          name: Set PowerLimit
+          entity: input_number.miner_s9_targetpower
+          icon_color: green
+          tap_action:
+            action: call-service
+            service: shell_command.set_miner_s9_setpowerlimit
+            data: {}
+        - type: custom:stack-in-card
+          mode: horizontal
+          cards:
+            - type: custom:stack-in-card
+              mode: vertical
+              cards:
+                - type: custom:mushroom-template-card
+                  primary: >
+                    HashBoard 01 - {{
+                    states('sensor.miner_s9_tunerstatus_hb1_status') }}
+                  secondary: >
+                    {{ states('sensor.miner_s9_tunerstatus_hb1_apc') if
+                    (states('sensor.miner_s9_config_status') == '1') else 0 }} W
+                     - {{ states('sensor.miner_s9_temps_board_01') | round(0) if
+                    (states('sensor.miner_s9_config_status') == '1') else 0 }}°C
+                  entity: sensor.miner_s9_config
+                  icon: mdi:card-bulleted-outline
+                  icon_color: >-
+                    {{ 'green' if
+                    (states('sensor.miner_s9_tunerstatus_hb1_tunerrunning') ==
+                    'True') else 'red' }}
+                - type: custom:mushroom-template-card
+                  primary: >
+                    HashBoard 02 - {{
+                    states('sensor.miner_s9_tunerstatus_hb2_status') }}
+                  secondary: >
+                    {{ states('sensor.miner_s9_tunerstatus_hb2_apc') if
+                    (states('sensor.miner_s9_config_status') == '1') else 0 }} W
+                     - {{ states('sensor.miner_s9_temps_board_02') | round(0) if
+                    (states('sensor.miner_s9_config_status') == '1') else 0 }}°C
+                  entity: sensor.miner_s9_config
+                  icon: mdi:card-bulleted-outline
+                  icon_color: >-
+                    {{ 'green' if
+                    (states('sensor.miner_s9_tunerstatus_hb2_tunerrunning') ==
+                    'True') else 'red' }}
+                - type: custom:mushroom-template-card
+                  primary: >
+                    HashBoard 03 - {{
+                    states('sensor.miner_s9_tunerstatus_hb3_status') }}
+                  secondary: >
+                    {{ states('sensor.miner_s9_tunerstatus_hb3_apc') if
+                    (states('sensor.miner_s9_config_status') == '1') else 0 }} W
+                     - {{ states('sensor.miner_s9_temps_board_03') | round(0) if
+                    (states('sensor.miner_s9_config_status') == '1') else 0 }}°C
+                  entity: sensor.miner_s9_config
+                  icon: mdi:card-bulleted-outline
+                  icon_color: >-
+                    {{ 'green' if
+                    (states('sensor.miner_s9_tunerstatus_hb3_tunerrunning') ==
+                    'True') else 'red' }}
+        - type: custom:stack-in-card
+          mode: horizontal
+          cards:
+            - type: custom:mushroom-template-card
+              primary: >
+                {{ states('sensor.miner_s9_fans_fan01_speed') if
+                (states('sensor.miner_s9_config_status') == '1') else 0 }}% - {{
+                states('sensor.miner_s9_fans_fan01_rpm') if
+                (states('sensor.miner_s9_config_status') == '1') else 0 }} RPM
+              secondary: FAN 01
+              icon: mdi:fan
+              entity: sensor.miner_s9_config
+              icon_color: >-
+                {{ 'green' if ((states('sensor.miner_s9_fans_fan01_rpm') ) >= 1) else 'red' }}
+              badge_icon: ''
+            - type: custom:mushroom-template-card
+              primary: >
+                {{ states('sensor.miner_s9_fans_fan02_speed')  if
+                (states('sensor.miner_s9_config_status') == '1') else 0 }}% - {{
+                states('sensor.miner_s9_fans_fan02_rpm')  if
+                (states('sensor.miner_s9_config_status') == '1') else 0 }} RPM
+              secondary: FAN 02
+              icon: mdi:fan
+              entity: sensor.miner_s9_config
+              icon_color: >-
+                {{ 'green' if ((states('sensor.miner_s9_fans_fan02_rpm')) >= 1) else 'red' }}
+              badge_icon: ''

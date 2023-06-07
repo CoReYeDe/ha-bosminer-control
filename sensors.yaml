@@ -1,0 +1,245 @@
+# command_line-Sensors to get Miner-Informations via BOS-API (JSON)
+
+- platform: command_line
+  name: miner_s9_config
+  command: "echo '{\"command\":\"config\"}' | nc 192.168.100.231 4028 | jq ."
+  scan_interval: 10
+  json_attributes:
+   - STATUS
+   - CONFIG
+  value_template: >-
+    {{ 'OK' if ('STATUS' in value_json) else None }}    
+    
+- platform: command_line
+  name: miner_s9_fans
+  command: "echo '{\"command\":\"fans\"}' | nc 192.168.100.231 4028 | jq ."
+  scan_interval: 10
+  json_attributes:
+   - STATUS
+   - FANS
+  value_template: >-
+    {{ 'OK' if ('STATUS' in value_json) else None }}    
+    
+- platform: command_line
+  name: miner_s9_temps
+  command: "echo '{\"command\":\"temps\"}' | nc 192.168.100.231 4028 | jq ."
+  scan_interval: 10
+  json_attributes:
+   - STATUS
+   - TEMPS
+  value_template: >-
+    {{ 'OK' if ('STATUS' in value_json) else None }}    
+    
+- platform: command_line
+  name: miner_s9_tunerstatus
+  command: "echo '{\"command\":\"tunerstatus\"}' | nc 192.168.100.231 4028 | jq ."
+  scan_interval: 10
+  json_attributes:
+   - STATUS
+   - TUNERSTATUS
+  value_template: >-
+    {{ 'OK' if ('STATUS' in value_json) else None }}    
+    
+- platform: command_line
+  name: miner_s9_devdetails 
+  command: "echo '{\"command\":\"devdetails\"}' | nc 192.168.100.231 4028 | jq ."
+  scan_interval: 10
+  json_attributes:
+   - STATUS
+   - DEVDETAILS
+  value_template: >-
+    {{ 'OK' if ('STATUS' in value_json) else None }}    
+    
+- platform: command_line
+  name: miner_s9_summary
+  command: "echo '{\"command\":\"summary\"}' | nc 192.168.100.231 4028 | jq ."
+  scan_interval: 10
+  json_attributes:
+   - STATUS
+   - SUMMARY
+  value_template: >-
+    {{ 'OK' if ('STATUS' in value_json) else None }}    
+
+# Template-Sensors to get the Values from command_line-Entities            
+- platform: template
+  sensors:
+    miner_s9_config_status:
+        friendly_name: Miner s9 Status
+        value_template: >
+            {{ 1 if (states('sensor.miner_s9_config') == 'OK') else 0 }}       
+    miner_s9_config_os:
+        friendly_name: Miner s9 OS
+        value_template: >
+            {{ state_attr('sensor.miner_s9_config', 'CONFIG')[0]['OS'] if (states('sensor.miner_s9_config_status')) else 'Offline'  }}       
+    miner_s9_status_description:
+        friendly_name: Miner s9 Description
+        value_template: >
+             {{ state_attr('sensor.miner_s9_config', 'STATUS')[0]['Description'] if (states('sensor.miner_s9_config_status')) else 'Offline' }}        
+    miner_s9_config_poolcount:
+        friendly_name: Miner s9 Pool Count
+        value_template: >
+             {{ state_attr('sensor.miner_s9_config', 'CONFIG')[0]['Pool Count'] if (states('sensor.miner_s9_config_status')) else 0 }}    
+                 
+    miner_s9_tunerstatus_powerlimit:
+        friendly_name: Miner s9 PowerLimit
+        unit_of_measurement: "W"
+        value_template: >
+             {{ state_attr('sensor.miner_s9_tunerstatus', 'TUNERSTATUS')[0]['PowerLimit'] if (states('sensor.miner_s9_config_status')) else 0 }}        
+
+    miner_s9_summary_miningtime:
+        friendly_name: Miner s9 Mining-Time
+        unit_of_measurement: "Min"
+        value_template: >
+             {{ ((state_attr('sensor.miner_s9_summary', 'SUMMARY')[0]['Elapsed']) | timestamp_custom("%H:%M:%S", false)) if (states('sensor.miner_s9_config_status')) else 0 }}        
+    miner_s9_summary_foundblocks:
+        friendly_name: Miner s9 Found Blocks
+        unit_of_measurement: "Blocks"
+        value_template: >
+             {{ (state_attr('sensor.miner_s9_summary', 'SUMMARY')[0]['Found Blocks']) if (states('sensor.miner_s9_config_status')) else 0 }}        
+    miner_s9_summary_hardware_errors:
+        friendly_name: Miner s9 Hardware-Errors
+        unit_of_measurement: "Errors"
+        value_template: >
+             {{ (state_attr('sensor.miner_s9_summary', 'SUMMARY')[0]['Hardware Errors']) if (states('sensor.miner_s9_config_status')) else 0 }}        
+
+    miner_s9_hashrate_avg:
+        friendly_name: Miner s9 HashRate AVG
+        unit_of_measurement: "TH/s"
+        value_template: >
+             {{ ((state_attr('sensor.miner_s9_summary', 'SUMMARY')[0]['MHS av'] / 1024 / 1024) | round(2)) if (states('sensor.miner_s9_config_status')) else 0 }}        
+    miner_s9_hashrate_5s:
+        friendly_name: Miner s9 HashRate 5s
+        unit_of_measurement: "TH/s"
+        value_template: >
+             {{ ((state_attr('sensor.miner_s9_summary', 'SUMMARY')[0]['MHS 5s'] / 1024 / 1024) | round(2)) if (states('sensor.miner_s9_config_status')) else 0 }}        
+    miner_s9_hashrate_15m:
+        friendly_name: Miner s9 HashRate 24h
+        unit_of_measurement: "GH/s"
+        value_template: >
+             {{ ((state_attr('sensor.miner_s9_summary', 'SUMMARY')[0]['MHS 15m'] / 1024 / 1024) | round(2)) if (states('sensor.miner_s9_config_status')) else 0 }}        
+    miner_s9_hashrate_24h:
+        friendly_name: Miner s9 HashRate 15m
+        unit_of_measurement: "TH/s"
+        value_template: >
+             {{ ((state_attr('sensor.miner_s9_summary', 'SUMMARY')[0]['MHS 24h'] / 1024) | round(2)) if (states('sensor.miner_s9_config_status')) else 0 }}        
+ 
+    miner_s9_tunerstatus_hb1_status:
+        friendly_name: Miner s9 HB01 Status
+        value_template: >
+             {{ state_attr('sensor.miner_s9_tunerstatus', 'TUNERSTATUS')[0]['TunerChainStatus'][0]['Status'] if (states('sensor.miner_s9_config_status')) else 0 }}        
+    miner_s9_tunerstatus_hb1_apc:
+        friendly_name: Miner s9 HB01 ApproximatePowerConsumption
+        unit_of_measurement: "W"
+        value_template: >
+             {{ state_attr('sensor.miner_s9_tunerstatus', 'TUNERSTATUS')[0]['TunerChainStatus'][0]['ApproximatePowerConsumptionWatt'] if (states('sensor.miner_s9_config_status')) else 0 }}        
+    miner_s9_tunerstatus_hb1_tunerrunning:
+        friendly_name: Miner s9 HB01 TunerRunning
+        value_template: >
+             {{ state_attr('sensor.miner_s9_tunerstatus', 'TUNERSTATUS')[0]['TunerChainStatus'][0]['TunerRunning'] if (states('sensor.miner_s9_config_status')) else 'False' }}        
+
+    miner_s9_tunerstatus_apc:
+        friendly_name: Miner s9 ApproximatePowerConsumption
+        unit_of_measurement: "W"
+        value_template: >
+             {{ state_attr('sensor.miner_s9_tunerstatus', 'TUNERSTATUS')[0]['ApproximatePowerConsumptionWatt'] if (states('sensor.miner_s9_config_status')) else 0 }}        
+    miner_s9_tunerstatus_amc:
+        friendly_name: Miner s9 ApproximateMinerPowerConsumption
+        unit_of_measurement: "W"
+        value_template: >
+             {{ state_attr('sensor.miner_s9_tunerstatus', 'TUNERSTATUS')[0]['ApproximateMinerPowerConsumption'] if (states('sensor.miner_s9_config_status')) else 0 }}        
+
+    miner_s9_miner_efficiency:
+        friendly_name: Miner s9 Efficiency
+        unit_of_measurement: "W/THs"
+        value_template: >
+             {{ ( float(states('sensor.miner_s9_tunerstatus_amc')) / float(states('sensor.miner_s9_hashrate_5s'))) | round(2) if (states('sensor.miner_s9_config_status')) else 0 }}        
+
+    miner_s9_tunerstatus_hb2_status:
+        friendly_name: Miner s9 HB02 Status
+        value_template: >
+             {{ state_attr('sensor.miner_s9_tunerstatus', 'TUNERSTATUS')[0]['TunerChainStatus'][1]['Status'] if (states('sensor.miner_s9_config_status')) else 0 }}        
+    miner_s9_tunerstatus_hb2_apc:
+        friendly_name: Miner s9 HB02 ApproximatePowerConsumption
+        unit_of_measurement: "W"
+        value_template: >
+             {{ state_attr('sensor.miner_s9_tunerstatus', 'TUNERSTATUS')[0]['TunerChainStatus'][1]['ApproximatePowerConsumptionWatt'] if (states('sensor.miner_s9_config_status')) else 0 }}        
+    miner_s9_tunerstatus_hb2_tunerrunning:
+        friendly_name: Miner s9 HB02 TunerRunning
+        value_template: >
+             {{ state_attr('sensor.miner_s9_tunerstatus', 'TUNERSTATUS')[0]['TunerChainStatus'][1]['TunerRunning'] if (states('sensor.miner_s9_config_status')) else 'False' }}        
+
+    miner_s9_tunerstatus_hb3_status:
+        friendly_name: Miner s9 HB03 Status
+        value_template: >
+             {{ state_attr('sensor.miner_s9_tunerstatus', 'TUNERSTATUS')[0]['TunerChainStatus'][2]['Status'] if (states('sensor.miner_s9_config_status')) else 0 }}        
+    miner_s9_tunerstatus_hb3_apc:
+        friendly_name: Miner s9 HB03 ApproximatePowerConsumption
+        unit_of_measurement: "W"
+        value_template: >
+             {{ state_attr('sensor.miner_s9_tunerstatus', 'TUNERSTATUS')[0]['TunerChainStatus'][2]['ApproximatePowerConsumptionWatt'] if (states('sensor.miner_s9_config_status')) else 0 }}        
+    miner_s9_tunerstatus_hb3_tunerrunning:
+        friendly_name: Miner s9 HB03 TunerRunning
+        value_template: >
+             {{ state_attr('sensor.miner_s9_tunerstatus', 'TUNERSTATUS')[0]['TunerChainStatus'][2]['TunerRunning'] if (states('sensor.miner_s9_config_status')) else 'False' }}        
+
+    miner_s9_fans_fan01_speed:
+        friendly_name: Miner s9 FAN 01 Speed
+        value_template: "{{ state_attr('sensor.miner_s9_fans', 'FANS')[0]['Speed'] if (states('sensor.miner_s9_config_status')) else 0 }}"    
+        unit_of_measurement: '%'
+    miner_s9_fans_fan01_rpm:
+        friendly_name: Miner s9 FAN 01 RPM
+        value_template: "{{ state_attr('sensor.miner_s9_fans', 'FANS')[0]['RPM'] if (states('sensor.miner_s9_config_status')) else 0 }}"
+        unit_of_measurement: 'RPM'
+
+    miner_s9_fans_fan02_speed:
+        friendly_name: Miner s9 FAN 02 Speed
+        value_template: "{{ state_attr('sensor.miner_s9_fans', 'FANS')[1]['Speed'] if (states('sensor.miner_s9_config_status')) else 0 }}"    
+        unit_of_measurement: '%'
+    miner_s9_fans_fan02_rpm:
+        friendly_name: Miner s9 FAN 02 RPM
+        value_template: "{{ state_attr('sensor.miner_s9_fans', 'FANS')[1]['RPM'] if (states('sensor.miner_s9_config_status')) else 0 }}"
+        unit_of_measurement: 'RPM'
+
+    miner_s9_fans_fan03_speed:
+        friendly_name: Miner s9 FAN 03 Speed
+        value_template: "{{ state_attr('sensor.miner_s9_fans', 'FANS')[2]['Speed'] if (states('sensor.miner_s9_config_status')) else 0 }}"    
+        unit_of_measurement: '%'
+    miner_s9_fans_fan03_rpm:
+        friendly_name: Miner s9 FAN 03 RPM
+        value_template: "{{ state_attr('sensor.miner_s9_fans', 'FANS')[2]['RPM'] if (states('sensor.miner_s9_config_status')) else 0 }}"
+        unit_of_measurement: 'RPM'
+
+    miner_s9_fans_fan04_speed:
+        friendly_name: Miner s9 FAN 04 Speed
+        value_template: "{{ state_attr('sensor.miner_s9_fans', 'FANS')[3]['Speed'] if (states('sensor.miner_s9_config_status')) else 0 }}"    
+        unit_of_measurement: '%'
+    miner_s9_fans_fan04_rpm:
+        friendly_name: Miner s9 FAN 04 RPM
+        value_template: "{{ state_attr('sensor.miner_s9_fans', 'FANS')[3]['RPM'] if (states('sensor.miner_s9_config_status')) else 0 }}"
+        unit_of_measurement: 'RPM'
+
+    miner_s9_temps_board_01:
+        friendly_name: Miner s9 Temp Board 01
+        value_template: "{{ state_attr('sensor.miner_s9_temps', 'TEMPS')[0]['Board'] | round(0)}} if (states('sensor.miner_s9_config_status')) else 0 }}"    
+        unit_of_measurement: ' °C'
+    miner_s9_temps_board_02:
+        friendly_name: Miner s9 Temp Board 02
+        value_template: "{{ state_attr('sensor.miner_s9_temps', 'TEMPS')[1]['Board'] | round(0)}} if (states('sensor.miner_s9_config_status')) else 0 }}"    
+        unit_of_measurement: ' °C'
+    miner_s9_temps_board_03:
+        friendly_name: Miner s9 Temp Board 03
+        value_template: "{{ state_attr('sensor.miner_s9_temps', 'TEMPS')[2]['Board'] | round(0)}} if (states('sensor.miner_s9_config_status')) else 0 }}"    
+        unit_of_measurement: ' °C'
+        
+    miner_s9_temps_chip_01:
+        friendly_name: Miner s9 Temp Chip 01
+        value_template: "{{ state_attr('sensor.miner_s9_temps', 'TEMPS')[0]['Chip'] | round(0)}} if (states('sensor.miner_s9_config_status')) else 0 }}"    
+        unit_of_measurement: ' °C'
+    miner_s9_temps_chip_02:
+        friendly_name: Miner s9 Temp Chip 02
+        value_template: "{{ state_attr('sensor.miner_s9_temps', 'TEMPS')[1]['Chip'] | round(0)}} if (states('sensor.miner_s9_config_status')) else 0 }}"    
+        unit_of_measurement: ' °C'
+    miner_s9_temps_chip_03:
+        friendly_name: Miner s9 Temp Chip 03
+        value_template: "{{ state_attr('sensor.miner_s9_temps', 'TEMPS')[2]['Chip'] | round(0)}} if (states('sensor.miner_s9_config_status')) else 0 }}"    
+        unit_of_measurement: ' °C'

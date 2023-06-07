@@ -1,0 +1,24 @@
+input_number:
+  miner_s9_targetpower:
+    name: Miner S9 Target-Power
+    initial: 300
+    min: 300
+    max: 800
+    step: 100
+    unit_of_measurement: W
+    icon: mdi:lightning-bolt
+    
+input_text:
+  miner_s9i_ip:
+    name: Miner S9 IP
+    initial: 192.168.0.1
+    icon: mdi:ip-network
+    patter: "^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"
+    max: 15
+    min: 7
+    
+shell_command:
+  set_miner_s9_setpowerlimit: bash /config/ssh_scripts/control_miner.sh {{states('input_text.miner_s9_ip')}} setpowerlimit {{states('input_number.miner_s9_targetpower')}}
+  set_miner_s9_pause: bash /config/ssh_scripts/control_miner.sh {{states('input_text.miner_s9_ip')}} pause
+  set_miner_s9_resume: bash /config/ssh_scripts/control_miner.sh {{states('input_text.miner_s9_ip')}} resume
+  

@@ -1,0 +1,15 @@
+- alias: Miner-S9-SetPower
+  description: 'Set TargetPower for Miner and Restart bosminer'
+  trigger:
+  - platform: state
+    entity_id:
+    - input_number.miner_s9_targetpower
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 3
+  condition: []
+  action:
+  - service: shell_command.set_miner_s9_setpowerlimit
+    data: {}
+  mode: single
