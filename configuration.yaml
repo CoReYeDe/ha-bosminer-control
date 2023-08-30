@@ -10,13 +10,13 @@ input_number:
     
 input_text:
   miner_s9i_ip:
-    name: Miner S9 IP
-    initial: 192.168.0.1
-    icon: mdi:ip-network
-    patter: "^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"
-    max: 15
-    min: 7
-    
+      name: Miner S9i IP
+      initial: 192.168.0.1
+      icon: mdi:ip-network
+      pattern: '^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$'
+      max: 15
+      min: 7
+      
 shell_command:
   set_miner_s9_setpowerlimit: bash /config/ssh_scripts/control_miner.sh {{states('input_text.miner_s9_ip')}} setpowerlimit {{states('input_number.miner_s9_targetpower')}}
   set_miner_s9_pause: bash /config/ssh_scripts/control_miner.sh {{states('input_text.miner_s9_ip')}} pause
